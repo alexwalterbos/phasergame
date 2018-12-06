@@ -13,43 +13,65 @@
 		physics: {
 			default: 'arcade',
 			arcade: {
-				gravity: { y: 200 }
+				gravity: {y: 200},
+				debug: window.location.href.indexOf('localhost') >= 0,
 			}
 		},
 		scene: {
 			preload: preload,
-			create: create
+			create: create,
+			update: update,
 		}
-	};
-
-	var game = new Phaser.Game(config);
-
-	function preload ()
-	{
-		this.load.image('sky', 'assets/skies/space3.png');
-		this.load.image('bram_stout', 'assets/bram_stout_sprite.png');
-		this.load.image('record', 'assets/record_sprite.png');
 	}
 
-	function create ()
-	{
-		this.add.image(400, 300, 'record');
+	var game = new Phaser.Game(config)
+	var road;
+	var joenah;
 
+		function preload () {
+			this.load.image('sky', 'assets/sky.png')
+			this.load.image('bram_stout', 'assets/bram_stout_sprite.png')
+			this.load.image('record', 'assets/record_sprite.png')
+			this.load.image('road', 'assets/road.png')
+			this.load.image('joenah', 'assets/joenah_boom.png')
+		}
+
+	function create () {
+		this.add.image(400, 300, 'sky');
+		road = this.add.tileSprite(400, 600 - 40, 800, 80, 'road')
+		joenah = this.add.image(100, 300, 'joenah');
 		var particles = this.add.particles('red');
 
-		var emitter = particles.createEmitter({
-			speed: 100,
-			scale: { start: 1, end: 0 },
-			blendMode: 'ADD'
-		});
+		//
+		// var emitter = particles.createEmitter({
+		// 	speed: 100,
+		// 	scale: { start: 1, end: 0 },
+		// 	blendMode: 'ADD'
+		// });
 
-		var logo = this.physics.add.image(100, 700, 'bram_stout');
+		// var logo = this.physics.add.image(100, 700, 'bram_stout');
+		//
+		// logo.setVelocity(300, 0);
+		// logo.setBounce(1, 1);
+		// logo.setCollideWorldBounds(true);
+		//
+		// emitter.startFollow(logo);
+	}
 
-		logo.setVelocity(300, 0);
-		logo.setBounce(1, 1);
-		logo.setCollideWorldBounds(true);
+	var speed = 1;
+	var maxSpeed = 5;
+	var iter = 0;
 
-		emitter.startFollow(logo);
+	function height(x) {
+		return Math.sin(x)*160 + 280;
+	}
+
+	function update () {
+		road.tilePositionX += speed;
+		if (speed <= maxSpeed) speed += 0.01;
+
+		joenah.y = height(iter);
+		iter += 0.01;
 	}
 </script>
 
