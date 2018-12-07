@@ -6,6 +6,7 @@
 <body>
 
 <script>
+	console.log(window.location.href.indexOf('localhost') >= 0);
 	var config = {
 		type: Phaser.AUTO,
 		width: 800,
@@ -27,21 +28,45 @@
 	var game = new Phaser.Game(config)
 	var road;
 	var joenah;
+	var bram;
+	var cursor = {
+			x: 0,
+			y: 0
+	};
 
-		function preload () {
-			this.load.image('sky', 'assets/sky.png')
-			this.load.image('bram_stout', 'assets/bram_stout_sprite.png')
-			this.load.image('record', 'assets/record_sprite.png')
-			this.load.image('road', 'assets/road.png')
-			this.load.image('joenah', 'assets/joenah_boom.png')
-		}
+	function preload () {
+		this.load.image('sky', 'assets/sky.png')
+		this.load.image('bram', 'assets/bram_stout_sprite.png')
+		this.load.image('record', 'assets/record_sprite.png')
+		this.load.image('road', 'assets/road.png')
+		this.load.image('joenah', 'assets/joenah_boom.png')
+	}
+
+	function bulletCollider(args) {
+		console.log('BOOM')
+	  console.log(JSON.stringify(args))
+	}
 
 	function create () {
-		this.add.image(400, 300, 'sky');
+		this.add.image(400, 300, 'sky')
 		road = this.add.tileSprite(400, 600 - 40, 800, 80, 'road')
-		joenah = this.add.image(100, 300, 'joenah');
+		joenah = this.add.image(100, 300, 'joenah')
+		bram = this.physics.add.image(700, 300, 'bram');
+		bram.body.setAllowGravity(false);
+		bram.setImmovable(true);
 		var particles = this.add.particles('red');
+		this.input.on('pointermove', function (pointer) {
+			cursor = pointer;
+		}, this);
+		var that = this;
+		this.input.on('pointerdown', function (pointer) {
+			console.log(joenah);
+			var bullet = that.physics.add.image(joenah.x + 60, pointer.y, 'record');
+			bullet.setVelocity(500, 0);
+			// Does not work
+			that.physics.add.collider(bullet, bram, bulletCollider);
 
+		}, this)
 		//
 		// var emitter = particles.createEmitter({
 		// 	speed: 100,
@@ -58,20 +83,22 @@
 		// emitter.startFollow(logo);
 	}
 
-	var speed = 1;
-	var maxSpeed = 5;
-	var iter = 0;
+	var speed = 1
+	var maxSpeed = 7
+	var iter = 0
 
-	function height(x) {
-		return Math.sin(x)*160 + 280;
+	function height (x) {
+		return Math.sin(x) * 160 + Math.cos(x*4.5923) * 20 + Math.sin(x*9.63940) * 5 + 280;
 	}
 
 	function update () {
-		road.tilePositionX += speed;
-		if (speed <= maxSpeed) speed += 0.01;
+		road.tilePositionX += speed
+		if (speed <= maxSpeed) speed += 0.01
 
-		joenah.y = height(iter);
-		iter += 0.01;
+		joenah.y = Math.max(Math.min(cursor.y, 600 - /* road height */ 80 - /* half of sprite height */ 70), /* half of sprite height */ 70);
+
+		bram.setY(height(iter))
+		iter += 0.01
 	}
 </script>
 
