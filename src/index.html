@@ -25,7 +25,7 @@
 	}
 
 	var game = new Phaser.Game(config)
-	var road, joenah, bram, scoreTitle, scoreText, score = 0, gameOver = false;
+	var road, joenah, bram, scoreTitle, scoreText, score = 0, gameOver = false, readyToFire = true;
 	var cursor = {
 			x: 0,
 			y: 0
@@ -55,7 +55,7 @@
 			that.add.image(400, 300, 'sky');
 			sleep(200).then(function after() {
 				that.add.image(400, 300, 'bram_braaf');
-				sleep(1000).then(function after() {
+				sleep(500).then(function after() {
 					that.add.image(400, 500, 'wereldvrede');
 				});
 			});
@@ -91,6 +91,8 @@
 				case 5:
 					scoreText.setText('BRAAF')
 					scoreText.setColor('#00ff00')
+					break;
+			    case 6:
 					endGame(that);
 					break
 			}
@@ -130,11 +132,15 @@
 			cursor = pointer;
 		}, this);
 		this.input.on('pointerdown', function (pointer) {
-			console.log(joenah);
+			if (!readyToFire) {
+				return;
+			}
 			var bullet = that.physics.add.image(joenah.x + 60, pointer.y, 'record');
 			bullet.setVelocity(550, -120);
 			// Does not work
 			that.physics.add.overlap(bullet, bram, bulletCollider(bullet), null, this);
+			readyToFire = false;
+			sleep(1000).then(function () { readyToFire = true });
 		}, this)
 		scoreTitle = this.make.text({
 	        add: true,
