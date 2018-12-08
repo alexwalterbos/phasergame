@@ -15,7 +15,6 @@
 			default: 'arcade',
 			arcade: {
 				gravity: {y: 200},
-				debug: window.location.href.indexOf('localhost') >= 0,
 			}
 		},
 		scene: {
@@ -26,11 +25,15 @@
 	}
 
 	var game = new Phaser.Game(config)
-	var road, joenah, bram, scoreTitle, scoreText, score = 0;
+	var road, joenah, bram, scoreTitle, scoreText, score = 0, gameOver = false;
 	var cursor = {
 			x: 0,
 			y: 0
 	};
+
+	function sleep(time) {
+		return new Promise(function (resolve) { setTimeout(resolve, time) });
+	}
 
 	function preload () {
 		this.load.image('sky', 'assets/sky.png');
@@ -38,53 +41,70 @@
 		this.load.image('record', 'assets/record_sprite.png');
 		this.load.image('road', 'assets/road.png');
 		this.load.image('joenah', 'assets/joenah_boom.png');
-	}
-
-	function updateScoreText() {
-		if (!scoreText) {
-			score = 0;
-			return;
-		}
-		var localScore = Math.floor(score / 2);
-		switch (localScore) {
-			case 0:
-				scoreText.setText('KWAADAARDIG')
-				scoreText.setColor('#ff0000')
-				break
-			case 1:
-				scoreText.setText('RELSCHOPPER')
-				scoreText.setColor('#ff0000')
-				break
-			case 2:
-				scoreText.setText('ONBESCHOFT')
-				scoreText.setColor('#ff0000')
-				break
-			case 3:
-				scoreText.setText('TEGENDRAADS')
-				scoreText.setColor('#ff00ff')
-				break
-			case 4:
-				scoreText.setText('TOE AAN EEN DUTJE')
-				scoreText.setColor('#0000ff')
-				break
-			case 5:
-				scoreText.setText('BRAAF')
-				scoreText.setColor('#00ff00')
-				break
-		}
-	}
-
-	function bulletCollider(bullet) {
-		return function (args) {
-			console.log('BOOM');
-			console.log(JSON.stringify(args));
-			bullet.destroy();
-			score++;
-			updateScoreText();
-		}
+		this.load.image('wereldvrede', 'assets/wereldvrede.png');
+		this.load.image('bram_braaf', 'assets/bram_braaf.png');
 	}
 
 	function create () {
+		var that = this
+
+		function endGame() {
+			gameOver = true;
+
+			game.scene.pause("default");
+			that.add.image(400, 300, 'sky');
+			sleep(200).then(function after() {
+				that.add.image(400, 300, 'bram_braaf');
+				sleep(1000).then(function after() {
+					that.add.image(400, 500, 'wereldvrede');
+				});
+			});
+		}
+
+		function updateScoreText() {
+			if (!scoreText) {
+				score = 0;
+				return;
+			}
+			var localScore = Math.floor(score / 2);
+			switch (localScore) {
+				case 0:
+					scoreText.setText('KWAADAARDIG')
+					scoreText.setColor('#ff0000')
+					break
+				case 1:
+					scoreText.setText('RELSCHOPPER')
+					scoreText.setColor('#ff0000')
+					break
+				case 2:
+					scoreText.setText('ONBESCHOFT')
+					scoreText.setColor('#ff0000')
+					break
+				case 3:
+					scoreText.setText('TEGENDRAADS')
+					scoreText.setColor('#ff00ff')
+					break
+				case 4:
+					scoreText.setText('TOE AAN EEN DUTJE')
+					scoreText.setColor('#0000ff')
+					break
+				case 5:
+					scoreText.setText('BRAAF')
+					scoreText.setColor('#00ff00')
+					endGame(that);
+					break
+			}
+		}
+
+		function bulletCollider(bullet) {
+			return function (args) {
+				console.log('BOOM');
+				console.log(JSON.stringify(args));
+				bullet.destroy();
+				score++;
+				updateScoreText();
+			}
+		}
 		var fullscreen = this.sys.game.device.fullscreen;
 		var fullscreenBtn = document.createElement('button');
 		fullscreenBtn.textContent = 'Start fullscreen';
@@ -109,11 +129,10 @@
 		this.input.on('pointermove', function (pointer) {
 			cursor = pointer;
 		}, this);
-		var that = this;
 		this.input.on('pointerdown', function (pointer) {
 			console.log(joenah);
 			var bullet = that.physics.add.image(joenah.x + 60, pointer.y, 'record');
-			bullet.setVelocity(500, 0);
+			bullet.setVelocity(550, -120);
 			// Does not work
 			that.physics.add.overlap(bullet, bram, bulletCollider(bullet), null, this);
 		}, this)
@@ -142,6 +161,9 @@
 			}
 		});
 		updateScoreText();
+
+		//
+		// var intro = this.add.image(400, 300, 'sky')
 		//
 		// var emitter = particles.createEmitter({
 		// 	speed: 100,
